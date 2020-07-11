@@ -1,23 +1,44 @@
-const sgSvc = require("./src/services/sendgrid_service.js");
+const sgSvc = require("./services/sendgrid_service.js");
+const config = require("./config.js");
 
-exports.handler = async (event, context) => {
-    return new Promise(()=>{
+exports.handler = (event, context) => {
+    event.Records.forEach(async record => {
 
-        event.Records.forEach(record=>{
+        const {
+            type,
+            recipientEmail,
+            parameters: templateData
+        } = JSON.parse(record.body);
 
-            const request = JSON.parse(record.body);
+        let templateId;
 
-            const {type, recipient, parameters} = request;
+        switch (type.toUpperCase()) {
+            case "SEND_REMINDER":
+                templateId = config.sendReminderTemplateId;
+                break;
+            case "CONFIRM_REGISTRATION":
+                templateId = config.confirmRegistrationTemplateId;
+                break;
+            case "CONFIRM_UNREGISTRATION":
+                templateId = config.confirmUnregistrationTemplateId;
+                break;
+            case "REGISTRATION_COMPLETED":
+                templateId = config.registrationCompletedTemplateId;
+                break;
+            case "UNREGISTRATION_COMPLETED":
+                templateId = config.unregistrationCompletedTemplateId;
+                break;
+        }
 
-            if(type === "SEND_REMINDER"){
-                
-            }
-            else if(type === "REGISTER_EMAIL"){
+        const response = await sgSvc.sendMail(
+            recipientEmail,
+            config.serviceEmail,
+            templateId,
+            templateData
+        );
 
-            }
-            else if(type === "UNREGISTER_EMAIL"){
-                
-            };
-        });
+        if (response[0].statusCode === 200) {
+            console.log("Email sent!")
+        }
     });
 }
