@@ -4,6 +4,8 @@ const config = require("./config.js");
 exports.handler = (event, context) => {
     event.Records.forEach(async record => {
 
+        console.log(record.body);
+
         const {
             type,
             recipientEmail,
